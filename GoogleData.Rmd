@@ -1,0 +1,916 @@
+---
+title: "GoogleDataCOD"
+author: "Logan Blair"
+date: "September 21, 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(digest)
+library(glue)
+library(reticulate)
+library(knitr)
+library(maps)
+library(ggplot2)
+library(viridis)                                                          
+library(pals)
+library(scico)
+library(ggrepel)
+library(tidyr)
+library(trendyy)
+library(rdrop2)
+library(fansi)
+
+
+#install_version("gtrendsR", version = "1.4.2", repos = "http://cran.us.r-project.org")
+library(gtrendsR)
+
+```
+
+Load Google Crosswalk
+```{r}
+GoogleFIPS<-read.csv("StateGoogleCrosswalk.csv")
+
+
+
+```
+
+
+
+Google Trends API call for climate change
+```{r}
+#Set Parameters
+search<-"climate change"
+time<-"2004-01-01 2019-12-31"
+type<-"web"
+baseline<-"US-DE"
+
+#run API calls at a time keeping VT in each
+Group1 <- gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-AL"
+,"US-ND"
+,"US-AZ"
+,"US-AR"
+))
+
+Group2 <- gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-CA"
+,"US-CO"
+,"US-CT"
+,"US-DE"
+))
+
+
+Group3 <- gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-DC"
+,"US-FL"
+,"US-GA"
+#,"US-HI"
+))
+
+Group4 <- gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-ID"
+,"US-IL"
+,"US-IN"
+,"US-IA"
+))
+
+Group5 <- gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-KS"
+,"US-KY"
+,"US-LA"
+,"US-ME"
+))
+
+Group6 <- gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-MD"
+,"US-MA"
+,"US-MI"
+,"US-MN"
+))
+
+Group7 <- gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-MS"
+,"US-MO"
+,"US-MT"
+,"US-NE"
+))
+
+Group8 <- gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-NV"
+,"US-NH"
+,"US-NJ"
+,"US-NM"
+))
+
+Group9 <- gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-NY"
+,"US-NC"
+,"US-VT"
+,"US-OH"
+))
+
+Group10 <- gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-OK"
+,"US-OR"
+,"US-PA"
+#,"US-PR"
+))
+Group11 <- gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-RI"
+,"US-SC"
+,"US-SD"
+,"US-TN"
+))
+Group12 <- gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-TX"
+,"US-UT"
+,"US-VA"
+#,"US-VI"
+))
+Group13 <- gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-WA"
+,"US-WV"
+,"US-WI"
+,"US-WY"
+))
+
+#Remove Baseline from all but 1 series
+Group2$interest_over_time<-subset(Group2$interest_over_time, geo!=baseline)
+Group3$interest_over_time<-subset(Group3$interest_over_time, geo!=baseline)
+Group4$interest_over_time<-subset(Group4$interest_over_time, geo!=baseline)
+Group5$interest_over_time<-subset(Group5$interest_over_time, geo!=baseline)
+Group6$interest_over_time<-subset(Group6$interest_over_time, geo!=baseline)
+Group7$interest_over_time<-subset(Group7$interest_over_time, geo!=baseline)
+Group8$interest_over_time<-subset(Group8$interest_over_time, geo!=baseline)
+Group9$interest_over_time<-subset(Group9$interest_over_time, geo!=baseline)
+Group10$interest_over_time<-subset(Group10$interest_over_time, geo!=baseline)
+Group11$interest_over_time<-subset(Group11$interest_over_time, geo!=baseline)
+Group12$interest_over_time<-subset(Group12$interest_over_time, geo!=baseline)
+Group13$interest_over_time<-subset(Group13$interest_over_time, geo!=baseline)
+
+
+#Compile
+climatechangegroup<-rbind(
+            Group1$interest_over_time,
+            Group2$interest_over_time,
+            Group3$interest_over_time,
+            Group4$interest_over_time,
+            Group5$interest_over_time,
+            Group6$interest_over_time,
+            Group7$interest_over_time,
+            Group8$interest_over_time,
+            Group9$interest_over_time,
+            Group10$interest_over_time,
+            Group11$interest_over_time,
+            Group12$interest_over_time,
+            Group13$interest_over_time
+            )
+
+climatechangegroup<-merge(climatechangegroup, GoogleFIPS, by = "geo", all.x = TRUE) #merge fips
+
+climatechangegroup$year<-substr(climatechangegroup$date, 1,4) #pull out year as separate var
+climatechangegroup$month<-substr(climatechangegroup$date, 6,7) #pull out month as separate var
+
+climatechangegroup$hits<-ifelse(climatechangegroup$hits=="<1",0,climatechangegroup$hits)
+
+#write.csv(climatechangegroup, "GoogleClimateChange.csv")
+```
+
+#Google Trends API call for global warming
+```{r}
+#Set Parameters
+search<-"global warming"
+time<-"2004-01-01 2019-12-31"
+type<-"web"
+baseline<-"US-ND" 
+
+#run API calls at a time keeping WV in each
+Group1 <- gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-AL"
+#,"US-ND"
+,"US-AZ"
+,"US-AR"
+))
+
+Group2 <- gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-CA"
+,"US-CO"
+,"US-CT"
+,"US-DE"
+))
+
+
+Group3 <- gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-DC"
+,"US-FL"
+,"US-GA"
+#,"US-HI"
+))
+
+Group4 <- gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-ID"
+,"US-IL"
+,"US-IN"
+,"US-IA"
+))
+
+Group5 <- gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-KS"
+,"US-KY"
+,"US-LA"
+,"US-ME"
+))
+
+Group6 <- gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-MD"
+,"US-MA"
+,"US-MI"
+,"US-MN"
+))
+
+Group7 <- gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-MS"
+,"US-MO"
+,"US-MT"
+,"US-NE"
+))
+
+Group8 <- gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-NV"
+,"US-NH"
+,"US-NJ"
+,"US-NM"
+))
+
+Group9 <- gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-NY"
+,"US-NC"
+,"US-VT"
+,"US-OH"
+))
+
+Group10 <- gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-OK"
+,"US-OR"
+,"US-PA"
+#,"US-PR"
+))
+Group11 <- gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-RI"
+,"US-SC"
+,"US-SD"
+,"US-TN"
+))
+Group12 <- gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-TX"
+,"US-UT"
+,"US-VA"
+#,"US-VI"
+))
+Group13 <- gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-WA"
+,"US-WV"
+,"US-WI"
+,"US-WY"
+))
+
+#Remove Baseline from all but 1 series
+Group2$interest_over_time<-subset(Group2$interest_over_time, geo!=baseline)
+Group3$interest_over_time<-subset(Group3$interest_over_time, geo!=baseline)
+Group4$interest_over_time<-subset(Group4$interest_over_time, geo!=baseline)
+Group5$interest_over_time<-subset(Group5$interest_over_time, geo!=baseline)
+Group6$interest_over_time<-subset(Group6$interest_over_time, geo!=baseline)
+Group7$interest_over_time<-subset(Group7$interest_over_time, geo!=baseline)
+Group8$interest_over_time<-subset(Group8$interest_over_time, geo!=baseline)
+Group9$interest_over_time<-subset(Group9$interest_over_time, geo!=baseline)
+Group10$interest_over_time<-subset(Group10$interest_over_time, geo!=baseline)
+Group11$interest_over_time<-subset(Group11$interest_over_time, geo!=baseline)
+Group12$interest_over_time<-subset(Group12$interest_over_time, geo!=baseline)
+Group13$interest_over_time<-subset(Group13$interest_over_time, geo!=baseline)
+
+
+#Compile
+globalwarminggroup<-rbind(
+            Group1$interest_over_time,
+            Group2$interest_over_time,
+            Group3$interest_over_time,
+            Group4$interest_over_time,
+            Group5$interest_over_time,
+            Group6$interest_over_time,
+            Group7$interest_over_time,
+            Group8$interest_over_time,
+            Group9$interest_over_time,
+            Group10$interest_over_time,
+            Group11$interest_over_time,
+            Group12$interest_over_time,
+            Group13$interest_over_time
+            )
+
+globalwarminggroup<-merge(globalwarminggroup, GoogleFIPS, by = "geo", all.x = TRUE) #merge fips
+
+globalwarminggroup$year<-substr(globalwarminggroup$date, 1,4) #pull out year as separate var
+globalwarminggroup$month<-substr(globalwarminggroup$date, 6,7) #pull out month as separate var
+
+globalwarminggroup$hits<-ifelse(globalwarminggroup$hits=="<1",0,globalwarminggroup$hits)
+
+
+write.csv(globalwarminggroup, "GoogleGlobalWarming.csv")
+```
+
+
+#Google Trends API call for climate hoax
+```{r}
+#Set Parameters
+search<-"climate hoax"
+time<-"2004-01-01 2019-12-31"
+type<-"web"
+baseline<-"US-WV" 
+
+#run API calls at a time keeping VT in each
+Group1 <- gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-AL"
+,"US-ND"
+,"US-AZ"
+,"US-AR"
+))
+
+Group2 <- gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-CA"
+,"US-CO"
+,"US-CT"
+,"US-DE"
+))
+
+
+Group3 <- gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-DC"
+,"US-FL"
+,"US-GA"
+#,"US-HI"
+))
+
+Group4 <- gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-ID"
+,"US-IL"
+,"US-IN"
+,"US-IA"
+))
+
+Group5 <- gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-KS"
+,"US-KY"
+,"US-LA"
+,"US-ME"
+))
+
+Group6 <- gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-MD"
+,"US-MA"
+,"US-MI"
+,"US-MN"
+))
+
+Group7 <- gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-MS"
+,"US-MO"
+,"US-MT"
+,"US-NE"
+))
+
+Group8 <- gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-NV"
+,"US-NH"
+,"US-NJ"
+,"US-NM"
+))
+
+Group9 <- gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-NY"
+,"US-NC"
+,"US-VT"
+,"US-OH"
+))
+
+Group10 <- gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-OK"
+,"US-OR"
+,"US-PA"
+#,"US-PR"
+))
+Group11 <- gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-RI"
+,"US-SC"
+,"US-SD"
+,"US-TN"
+))
+Group12 <- gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-TX"
+,"US-UT"
+,"US-VA"
+#,"US-VI"
+))
+Group13 <- gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-WA"
+,"US-WV"
+,"US-WI"
+,"US-WY"
+))
+
+#Remove Baseline from all but 1 series
+Group2$interest_over_time<-subset(Group2$interest_over_time, geo!=baseline)
+Group3$interest_over_time<-subset(Group3$interest_over_time, geo!=baseline)
+Group4$interest_over_time<-subset(Group4$interest_over_time, geo!=baseline)
+Group5$interest_over_time<-subset(Group5$interest_over_time, geo!=baseline)
+Group6$interest_over_time<-subset(Group6$interest_over_time, geo!=baseline)
+Group7$interest_over_time<-subset(Group7$interest_over_time, geo!=baseline)
+Group8$interest_over_time<-subset(Group8$interest_over_time, geo!=baseline)
+Group9$interest_over_time<-subset(Group9$interest_over_time, geo!=baseline)
+Group10$interest_over_time<-subset(Group10$interest_over_time, geo!=baseline)
+Group11$interest_over_time<-subset(Group11$interest_over_time, geo!=baseline)
+Group12$interest_over_time<-subset(Group12$interest_over_time, geo!=baseline)
+Group13$interest_over_time<-subset(Group13$interest_over_time, geo!=baseline)
+
+
+#Compile
+climatehoaxgroup<-rbind(
+            Group1$interest_over_time,
+            Group2$interest_over_time,
+            Group3$interest_over_time,
+            Group4$interest_over_time,
+            Group5$interest_over_time,
+            Group6$interest_over_time,
+            Group7$interest_over_time,
+            Group8$interest_over_time,
+            Group9$interest_over_time,
+            Group10$interest_over_time,
+            Group11$interest_over_time,
+            Group12$interest_over_time,
+            Group13$interest_over_time
+            )
+
+climatehoaxgroup<-merge(climatehoaxgroup, GoogleFIPS, by = "geo", all.x = TRUE) #merge fips
+
+climatehoaxgroup$year<-substr(climatehoaxgroup$date, 1,4) #pull out year as separate var
+climatehoaxgroup$month<-substr(climatehoaxgroup$date, 6,7) #pull out month as separate var
+climatehoaxgroup$hits<-ifelse(climatehoaxgroup$hits=="<1",0,climatehoaxgroup$hits)
+
+write.csv(climatehoaxgroup, "GoogleClimateHoax.csv")
+
+```
+
+
+#Google Trends API call for puppies
+```{r}
+#Set Parameters
+search<-"puppies"
+time<-"2004-01-01 2019-12-31"
+type<-"web"
+baseline<-"US-SD" 
+
+#run API calls at a time keeping VT in each
+Group1 <- gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-AL"
+,"US-ND"
+,"US-AZ"
+,"US-AR"
+))
+
+Group2 <- gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-CA"
+,"US-CO"
+,"US-CT"
+,"US-DE"
+))
+
+
+Group3 <- gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-DC"
+,"US-FL"
+,"US-GA"
+#,"US-HI"
+))
+
+Group4 <- gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-ID"
+,"US-IL"
+,"US-IN"
+,"US-IA"
+))
+
+Group5 <- gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-KS"
+,"US-KY"
+,"US-LA"
+,"US-ME"
+))
+
+Group6 <- gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-MD"
+,"US-MA"
+,"US-MI"
+,"US-MN"
+))
+
+Group7 <- gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-MS"
+,"US-MO"
+,"US-MT"
+,"US-NE"
+))
+
+Group8 <- gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-NV"
+,"US-NH"
+,"US-NJ"
+,"US-NM"
+))
+
+Group9 <- gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-NY"
+,"US-NC"
+,"US-VT"
+,"US-OH"
+))
+
+Group10 <- gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-OK"
+,"US-OR"
+,"US-PA"
+#,"US-PR"
+))
+Group11 <- gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-RI"
+,"US-SC"
+,"US-SD"
+,"US-TN"
+))
+Group12 <- gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-TX"
+,"US-UT"
+,"US-VA"
+#,"US-VI"
+))
+Group13 <- gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-WA"
+,"US-WV"
+,"US-WI"
+,"US-WY"
+))
+
+#Remove Baseline from all but 1 series
+Group2$interest_over_time<-subset(Group2$interest_over_time, geo!=baseline)
+Group3$interest_over_time<-subset(Group3$interest_over_time, geo!=baseline)
+Group4$interest_over_time<-subset(Group4$interest_over_time, geo!=baseline)
+Group5$interest_over_time<-subset(Group5$interest_over_time, geo!=baseline)
+Group6$interest_over_time<-subset(Group6$interest_over_time, geo!=baseline)
+Group7$interest_over_time<-subset(Group7$interest_over_time, geo!=baseline)
+Group8$interest_over_time<-subset(Group8$interest_over_time, geo!=baseline)
+Group9$interest_over_time<-subset(Group9$interest_over_time, geo!=baseline)
+Group10$interest_over_time<-subset(Group10$interest_over_time, geo!=baseline)
+Group11$interest_over_time<-subset(Group11$interest_over_time, geo!=baseline)
+Group12$interest_over_time<-subset(Group12$interest_over_time, geo!=baseline)
+Group13$interest_over_time<-subset(Group13$interest_over_time, geo!=baseline)
+
+
+#Compile
+puppiesgroup<-rbind(
+            Group1$interest_over_time,
+            Group2$interest_over_time,
+            Group3$interest_over_time,
+            Group4$interest_over_time,
+            Group5$interest_over_time,
+            Group6$interest_over_time,
+            Group7$interest_over_time,
+            Group8$interest_over_time,
+            Group9$interest_over_time,
+            Group10$interest_over_time,
+            Group11$interest_over_time,
+            Group12$interest_over_time,
+            Group13$interest_over_time
+            )
+
+puppiesgroup<-merge(puppiesgroup, GoogleFIPS, by = "geo", all.x = TRUE) #merge fips
+
+puppiesgroup$year<-substr(puppiesgroup$date, 1,4) #pull out year as separate var
+puppiesgroup$month<-substr(puppiesgroup$date, 6,7) #pull out month as separate var
+puppiesgroup$hits<-ifelse(puppiesgroup$hits=="<1",0,puppiesgroup$hits)
+
+
+write.csv(puppiesgroup, "GooglePuppies.csv")
+
+```
+
+#Index Tests
+```{r}
+plot(Group1)
+plot(Group2)
+plot(Group3)
+plot(Group4)
+plot(Group5)
+plot(Group6)
+plot(Group7)
+plot(Group8)
+plot(Group9)
+plot(Group10)
+plot(Group11)
+plot(Group12)
+plot(Group13)
+
+Test <- gtrends("climate hoax", 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c("US-ID"
+,"US-ME"
+,"US-WV"
+,"US-ND"
+,"US-SD"
+))
+
+plot(Test)
+```
+
+Send to Dropbox
+```{r}
+drop_upload('GoogleClimateChange.csv', path = "Cost of Denial/Data/Google")
+drop_upload('GoogleGlobalWarming.csv', path = "Cost of Denial/Data/Google")
+drop_upload('GoogleClimateHoax.csv', path = "Cost of Denial/Data/Google")
+drop_upload('GooglePuppies.csv', path = "Cost of Denial/Data/Google")
+```
+
+
+Map the last group of API calls
+```{r}
+search <- gtrends("puppies", 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c("US"
+))
+
+
+
+SearchInterestByRegion <- as_tibble(search$interest_by_region)
+SearchInterestByRegion <- SearchInterestByRegion %>% 
+  dplyr::mutate(region = stringr::str_to_lower(location))
+
+statesMap = ggplot2::map_data("state")
+
+#SearchMerged <- merge(statesMap, Search, by = "region")
+SearchMerged <- SearchInterestByRegion %>% dplyr::left_join(x = ., 
+                                                            y = statesMap, 
+                                                            by = "region")
+
+
+my_theme <- function() {
+    theme_bw() +
+    theme(panel.background = element_blank()) +
+    theme(plot.background = element_rect(fill = "seashell")) +
+    theme(panel.border = element_blank()) +                     # facet border
+    theme(strip.background = element_blank()) +                 # facet title background
+    theme(plot.margin = unit(c(.5, .5, .5, .5), "cm")) +
+    theme(panel.spacing = unit(3, "lines")) +
+    theme(panel.grid.major = element_blank()) +
+    theme(panel.grid.minor = element_blank()) +
+    theme(legend.background = element_blank()) +
+    theme(legend.key = element_blank()) +
+    theme(legend.title = element_blank())
+  }
+
+
+my_theme2 = function() {
+  my_theme() +
+    theme(axis.title = element_blank()) +
+    theme(axis.text = element_blank()) +
+    theme(axis.ticks = element_blank())
+}
+
+SearchMerged %>% 
+  ggplot(aes(x = long, y = lat)) +
+  geom_polygon(aes(group = group, 
+                   fill = hits), 
+               colour = "white") +
+  scale_fill_gradientn(colours = rev(scico(15, 
+                                           palette = "tokyo")[2:7])) +
+  my_theme2() +
+  ggtitle("Google search interest  \nin each state 2015-12-01 to 2015-12-31") 
+
+
+
+```
+
+`
