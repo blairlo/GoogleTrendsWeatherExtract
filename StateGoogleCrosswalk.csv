@@ -1,0 +1,54 @@
+State,Abrev,FIPS,geo
+Alabama,AL,1,US-AL
+Alaska,AK,2,US-AK
+Arizona,AZ,4,US-AZ
+Arkansas,AR,5,US-AR
+California,CA,6,US-CA
+Colorado,CO,8,US-CO
+Connecticut,CT,9,US-CT
+Delaware,DE,10,US-DE
+District of Columbia,DC,11,US-DC
+Florida,FL,12,US-FL
+Georgia,GA,13,US-GA
+Hawaii,HI,15,US-HI
+Idaho,ID,16,US-ID
+Illinois,IL,17,US-IL
+Indiana,IN,18,US-IN
+Iowa,IA,19,US-IA
+Kansas,KS,20,US-KS
+Kentucky,KY,21,US-KY
+Louisiana,LA,22,US-LA
+Maine,ME,23,US-ME
+Maryland,MD,24,US-MD
+Massachusetts,MA,25,US-MA
+Michigan,MI,26,US-MI
+Minnesota,MN,27,US-MN
+Mississippi,MS,28,US-MS
+Missouri,MO,29,US-MO
+Montana,MT,30,US-MT
+Nebraska,NE,31,US-NE
+Nevada,NV,32,US-NV
+New Hampshire,NH,33,US-NH
+New Jersey,NJ,34,US-NJ
+New Mexico,NM,35,US-NM
+New York,NY,36,US-NY
+North Carolina,NC,37,US-NC
+North Dakota,ND,38,US-ND
+Ohio,OH,39,US-OH
+Oklahoma,OK,40,US-OK
+Oregon,OR,41,US-OR
+Pennsylvania,PA,42,US-PA
+Puerto Rico,PR,72,US-PR
+Rhode Island,RI,44,US-RI
+South Carolina,SC,45,US-SC
+South Dakota,SD,46,US-SD
+Tennessee,TN,47,US-TN
+Texas,TX,48,US-TX
+Utah,UT,49,US-UT
+Vermont,VT,50,US-VT
+Virginia,VA,51,US-VA
+Virgin Islands,VI,78,US-VI
+Washington,WA,53,US-WA
+West Virginia,WV,54,US-WV
+Wisconsin,WI,55,US-WI
+Wyoming,WY,56,US-WY
