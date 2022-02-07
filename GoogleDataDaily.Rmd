@@ -27,11 +27,12 @@ Packages <- c("digest",
               "fansi",
               "lubridate",
               "ExcelFunctionsR",
-              "gtrendsR",
-              "tidyquant"
+              "tidyquant",
+              "gtrendsR"
               )
 
 lapply(Packages, library, character.only = TRUE)
+
 
 ```
 
@@ -40,8 +41,6 @@ Load Various Lists and Crosswalks
 GoogleFIPS<-read.csv("StateGoogleCrosswalk.csv")
 DMA<-read.csv("google_metro_areas.csv")
 DMAFIPS<-read.csv("GoogleTrends_CountyDMA_Mapping.csv")
-DMA$DMAnum<-RIGHT(DMA$DMA, 3)
-
 ```
 
 
@@ -104,6 +103,7 @@ get_daily_gtrend <- function(geo, keyword, from , to,low_search_volume=TRUE) { #
     select(date, keyword, geo, est_hits) %>% #add geo here to account for multiple geographies
     as_tibble() %>%
     mutate(date = as.Date(date))
+  Sys.sleep(60)
   
   return(trend_res)
 }
@@ -111,25 +111,81 @@ get_daily_gtrend <- function(geo, keyword, from , to,low_search_volume=TRUE) { #
 ```
 
 
+
+```{r}
+
+get_daily_gtrend <- function(geo ,keyword , from , to,low_search_volume=TRUE) {
+  if (ymd(to) >= floor_date(Sys.Date(), 'month')) {
+    to <- floor_date(ymd(to), 'month') - days(1)
+    
+    if (to < from) {
+      stop("Specifying \'to\' date in the current month is not allowed")
+    }
+  }
+  
+  aggregated_data <- gtrends(geo = geo, keyword = keyword,  time = paste(from, to),low_search_volume=TRUE)
+  if(is.null(aggregated_data$interest_over_time)) {
+    print('There is no data in Google Trends!')
+    return()
+  }
+
+  mult_m <- aggregated_data$interest_over_time %>%
+    mutate(hits = as.integer(ifelse(hits == '<1', '0', hits))) %>%
+    group_by(month = floor_date(date, 'month'), keyword) %>%
+    summarise(hits = sum(hits)) %>%
+    ungroup() %>%
+    mutate(ym = format(month, '%Y-%m'),
+           mult = hits / max(hits)) %>%
+    select(month, ym, keyword, mult) %>%
+    as_tibble()
+  
+  pm <- tibble(s = seq(ymd(from), ymd(to), by = 'month'), 
+               e = seq(ymd(from), ymd(to), by = 'month') + months(1) - days(1))
+  
+  raw_trends_m <- tibble()
+  
+  for (i in seq(1, nrow(pm), 1)) {
+    curr <- gtrends(geo = geo,keyword,  time = paste(pm$s[i], pm$e[i]),low_search_volume=TRUE)
+    if(is.null(curr$interest_over_time)) next
+    print(paste('for', pm$s[i], pm$e[i], 'retrieved', count(curr$interest_over_time), 'days of data (all keywords)'))
+    raw_trends_m <- rbind(raw_trends_m,
+                         curr$interest_over_time)
+  }
+  
+  trend_m <- raw_trends_m %>%
+    select(date, keyword, hits) %>%
+    mutate(ym = format(date, '%Y-%m'),
+           hits = as.integer(ifelse(hits == '<1', '0', hits))) %>%
+    as_tibble()
+  
+  trend_res <- trend_m %>%
+    left_join(mult_m) %>%
+    mutate(est_hits = hits * mult) %>%
+    select(date, keyword, est_hits) %>%
+    as_tibble() %>%
+    mutate(date = as.Date(date))
+  
+  Sys.sleep(120)
+  return(trend_res)
+}
+
+```
+
 For Testing and Comparison
 ```{r}
 #Set Parameters
 keyword<-'weather'
 from<-'2013-01-01'
-to<-'2014-12-31'
-baseline<-"US-CA-771"
+to<-'2013-03-31'
+baseline<-"US-NY-501"
 
 #compile query groups
 
-
-Group1 <- get_daily_gtrend(c('weather','puppies'),from,to,low_search_volume = TRUE, geo = c(baseline,
-                                                                          "US-OR-813",
-                                                                          "US-AR-670",
-                                                                          "US-OH-515"))
+Group1 <- get_daily_gtrend( geo ='US-NY-501', keyword = c('weather'), from='2013-01-01',to ='2013-03-31')
  
 
-ggplot(Group1, aes(x = date, y = est_hits)) + 
-  geom_line(aes(color = geo)) #plot
+test<-ggplot(Group1, aes(x = date, y = est_hits)) + 
+  geom_line(aes(color = keyword)) #plot
                         
 ggplot(Group1, aes(x = date, y = est_hits)) + 
   geom_ma(aes(color = geo),ma_fun = SMA, n = 10) #plot 30 day moving average
@@ -137,12 +193,14 @@ ggplot(Group1, aes(x = date, y = est_hits)) +
 
 #Set Parameters
 search<-"weather"
-time<-"2013-01-01 2014-12-31"
+time<-"2013-01-01 2013-03-31"
 baseline<-"US-CA-771"
 
-Group2 <- gtrends(search, time = time, low_search_volume = TRUE, geo = c(baseline, "US-OR-813",
-                                                                                  "US-AR-670"))
 
+Group2 <- gtrends(c('weather'), time = time, geo = c("US-NY-501"))
+
+
+test
 plot(Group2) #plot monthly data
                       
 ```
@@ -157,16 +215,16 @@ https://towardsdatascience.com/using-google-trends-at-scale-1c8b902b6bfa
 Scaling up: Make a query list to iterate over
 
 #Daily Index for one term relative to itself in each DMA
-```{r}
+```{r message=FALSE}
 #Set Parameters
-keyword<-'weather'
-from<-'2013-01-01'
-to<-'2014-12-31'
+keyword<-c('weather','dog')
+from<-'2015-01-01'
+to<-'2021-12-31'
 
-DMA.list <- setNames(split(DMA, seq(nrow(DMA))), rownames(DMA))
-DMA.list <- lapply(DMA.list, paste, collapse = " ")
-DMA_list2<-lapply(DMA.list,get_daily_gtrend, keyword=keyword, from=from, to=to)#
-DMA_DF2<-bind_rows(DMA_list2, .id = "column_label")
+DMA.list <- setNames(split(DMA, seq(nrow(DMA))), rownames(DMA))#make a list of all (210 DMAs)
+DMA.list <- lapply(DMA.list, paste, collapse = " ") #make list text strings
+DMA_list2<-lapply(DMA.list,get_daily_gtrend, keyword=keyword, from=from, to=to) #loop over list to request trends for each DMA
+DMA_DF2<-bind_rows(DMA_list2, .id = "column_label") #stack results into 1 data frame
 
 ```
 
@@ -176,7 +234,7 @@ DMA_DF2<-bind_rows(DMA_list2, .id = "column_label")
 #Set Parameters
 keyword<-'weather'
 reference<-'furnature'
-from<-'2013-01-01'
+from<-'2005-01-01'
 to<-'2014-12-31'
 
 DMA.list <- setNames(split(DMA, seq(nrow(DMA))), rownames(DMA))
@@ -298,7 +356,71 @@ SearchMerged %>%
 
 ```{r}
 
+library(gtrendsR)
+library(tidyverse)
+library(lubridate)
 
+get_daily_gtrend <- function(keyword = c('Taylor Swift', 'Kim Kardashian'), geo = 'US', from = '2013-01-01', to = '2019-08-15') {
+  if (ymd(to) >= floor_date(Sys.Date(), 'month')) {
+    to <- floor_date(ymd(to), 'month') - days(1)
+    
+    if (to < from) {
+      stop("Specifying \'to\' date in the current month is not allowed")
+    }
+  }
+  
+  aggregated_data <- gtrends(keyword = keyword, geo = geo, time = paste(from, to))
+  if(is.null(aggregated_data$interest_over_time)) {
+    print('There is no data in Google Trends!')
+    return()
+  }
+
+  mult_m <- aggregated_data$interest_over_time %>%
+    mutate(hits = as.integer(ifelse(hits == '<1', '0', hits))) %>%
+    group_by(month = floor_date(date, 'month'), keyword) %>%
+    summarise(hits = sum(hits)) %>%
+    ungroup() %>%
+    mutate(ym = format(month, '%Y-%m'),
+           mult = hits / max(hits)) %>%
+    select(month, ym, keyword, mult) %>%
+    as_tibble()
+  
+  pm <- tibble(s = seq(ymd(from), ymd(to), by = 'month'), 
+               e = seq(ymd(from), ymd(to), by = 'month') + months(1) - days(1))
+  
+  raw_trends_m <- tibble()
+  
+  for (i in seq(1, nrow(pm), 1)) {
+    curr <- gtrends(keyword, geo = geo, time = paste(pm$s[i], pm$e[i]))
+    if(is.null(curr$interest_over_time)) next
+    print(paste('for', pm$s[i], pm$e[i], 'retrieved', count(curr$interest_over_time), 'days of data (all keywords)'))
+    raw_trends_m <- rbind(raw_trends_m,
+                         curr$interest_over_time)
+  }
+  
+  trend_m <- raw_trends_m %>%
+    select(date, keyword, hits) %>%
+    mutate(ym = format(date, '%Y-%m'),
+           hits = as.integer(ifelse(hits == '<1', '0', hits))) %>%
+    as_tibble()
+  
+  trend_res <- trend_m %>%
+    left_join(mult_m) %>%
+    mutate(est_hits = hits * mult) %>%
+    select(date, keyword, est_hits) %>%
+    as_tibble() %>%
+    mutate(date = as.Date(date))
+  
+  return(trend_res)
+}
+
+
+testx<-get_daily_gtrend(keyword = c('Taylor Swift', 'Kim Kardashian'), geo = 'US-AZ-753', from = '2016-01-01', to = '2021-12-28')
+
+testplot<-ggplot(Group1, aes(x = date, y = est_hits)) + 
+  geom_line(aes(color = keyword)) #plot
+
+testplot
 
 ```
 
