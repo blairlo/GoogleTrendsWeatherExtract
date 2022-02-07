@@ -9,22 +9,319 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+```{r}
+Packages <- c("digest", 
+              "glue", 
+              "reticulate", 
+              "knitr",
+              "maps",
+              "ggplot2",
+              "viridis",
+              "pals",
+              "scico",
+              "ggrepel",
+              "tidyr",
+              "tidyverse",
+              "rdrop2",
+              "fansi",
+              "lubridate",
+              "ExcelFunctionsR",
+              "gtrendsR"
+              )
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+lapply(Packages, library, character.only = TRUE)
 ```
 
-## Including Plots
 
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r}
+GoogleFIPS<-read.csv("StateGoogleCrosswalk.csv")
+GoogleCross<-read.csv("StateGoogleCrosswalk2.csv")
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+From Google:
+Values are calculated on a scale from 0 to 100, where 100 is the location with the most popularity as a fraction of total searches in that location, a value of 50 indicates a location which is half as popular. A value of 0 indicates a location where there was not enough data for this term. Note: A higher value means a higher proportion of all queries, not a higher absolute query count. So a tiny country where 80% of the queries are for "bananas" will get twice the score of a giant country where only 40% of the queries are for "bananas".
+
+
+```{r}
+
+#Set Parameters
+search<-"weather"
+time<-"2005-01-01 2017-12-31"
+type<-"web"
+#baseline<-"US-DE"
+
+
+TrendsAcrossGeo<- function(search,time,type) {
+  
+Index<-gtrends(keyword = search, geo = "US", time = time, gprop =type) #run Google trends for the US given your keyword
+Index<-Index$interest_by_region #pull out interest by state
+Index<-subset(Index, hits==100) #isolate state record with the index =100 
+Index<-merge(Index,GoogleCross, by.x = "location", by.y = "location",all.x = TRUE ) #convert state name to state code
+baseline<-Index$baseline #isolate baseline state code to include in each state-time trend request
+  
+#run API calls in batches keeping a baseline location in each
+trendlist <- list(gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-AL"
+,"US-ND"
+,"US-AZ"
+,"US-AR"
+)))
+
+
+Sys.sleep(120)
+
+trendlist<-c(trendlist,list(gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-CA"
+,"US-CO"
+,"US-CT"
+,"US-DE"
+))))
+
+
+Sys.sleep(120)
+
+trendlist<-c(trendlist,list(gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-DC"
+,"US-FL"
+,"US-GA"
+,"US-HI"
+))))
+
+Sys.sleep(120)
+
+trendlist<-c(trendlist,list(gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-ID"
+,"US-IL"
+,"US-IN"
+,"US-IA"
+))))
+
+Sys.sleep(120)
+
+trendlist<-c(trendlist,list(gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-KS"
+,"US-KY"
+,"US-LA"
+,"US-ME"
+))))
+
+Sys.sleep(120)
+
+trendlist<-c(trendlist,list(gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-MD"
+,"US-MA"
+,"US-MI"
+,"US-MN"
+))))
+
+Sys.sleep(120)
+
+trendlist<-c(trendlist,list(gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-MS"
+,"US-MO"
+,"US-MT"
+,"US-NE"
+))))
+
+Sys.sleep(120)
+
+trendlist<-c(trendlist,list(gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-NV"
+,"US-NH"
+,"US-NJ"
+,"US-NM"
+))))
+
+Sys.sleep(120)
+
+trendlist<-c(trendlist,list(gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-NY"
+,"US-NC"
+,"US-VT"
+,"US-OH"
+))))
+
+Sys.sleep(120)
+
+trendlist<-c(trendlist,list(gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-OK"
+,"US-OR"
+,"US-PA"
+#,"US-PR"
+))))
+
+Sys.sleep(120)
+
+trendlist<-c(trendlist,list(gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-RI"
+,"US-SC"
+,"US-SD"
+,"US-TN"
+))))
+
+Sys.sleep(120)
+
+trendlist<-c(trendlist,list(gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-TX"
+,"US-UT"
+,"US-VA"
+,"US-VI"
+))))
+
+Sys.sleep(120)
+
+trendlist<-c(trendlist,list(gtrends(search, 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c(baseline   
+,"US-WA"
+,"US-WV"
+,"US-WI"
+,"US-WY"
+))))
+
+Sys.sleep(120)
+
+Trendlist<-trendlist$interest_over_time
+
+
+trendlist[[2]]$interest_over_time<-subset(trendlist[[2]]$interest_over_time, geo!=baseline)#starts on 2 because we want to include the baseline, which should be the first series in our stacked data
+trendlist[[3]]$interest_over_time<-subset(trendlist[[3]]$interest_over_time, geo!=baseline)
+trendlist[[4]]$interest_over_time<-subset(trendlist[[4]]$interest_over_time, geo!=baseline)
+trendlist[[5]]$interest_over_time<-subset(trendlist[[5]]$interest_over_time, geo!=baseline)
+trendlist[[6]]$interest_over_time<-subset(trendlist[[6]]$interest_over_time, geo!=baseline)
+trendlist[[7]]$interest_over_time<-subset(trendlist[[7]]$interest_over_time, geo!=baseline)
+trendlist[[8]]$interest_over_time<-subset(trendlist[[8]]$interest_over_time, geo!=baseline)
+trendlist[[9]]$interest_over_time<-subset(trendlist[[9]]$interest_over_time, geo!=baseline)
+trendlist[[10]]$interest_over_time<-subset(trendlist[[10]]$interest_over_time, geo!=baseline)
+trendlist[[11]]$interest_over_time<-subset(trendlist[[11]]$interest_over_time, geo!=baseline)
+trendlist[[12]]$interest_over_time<-subset(trendlist[[12]]$interest_over_time, geo!=baseline)
+trendlist[[13]]$interest_over_time<-subset(trendlist[[13]]$interest_over_time, geo!=baseline)
+
+
+
+Trends<-rbind(
+           trendlist[[1]]$interest_over_time,
+           trendlist[[2]]$interest_over_time,
+           trendlist[[3]]$interest_over_time,
+           trendlist[[4]]$interest_over_time,
+           trendlist[[5]]$interest_over_time,
+           trendlist[[6]]$interest_over_time,
+           trendlist[[7]]$interest_over_time,
+           trendlist[[8]]$interest_over_time,
+           trendlist[[9]]$interest_over_time,
+           trendlist[[10]]$interest_over_time,
+           trendlist[[11]]$interest_over_time,
+           trendlist[[12]]$interest_over_time,
+           trendlist[[13]]$interest_over_time
+            )
+
+Trends<-merge(Trends, GoogleFIPS, by = "geo", all.x = TRUE) #merge fips
+Trends$year<-substr(Trends$date, 1,4) #pull out year as separate var
+Trends$month<-substr(Trends$date, 6,7) #pull out month as separate var
+
+
+print(Trends)
+
+
+}
+
+```
+
+
+```{r}
+test<-TrendsAcrossGeo(search,time,type)
+```
+
+
+
+
+
+
+
+
+#Tests For Index Geopgraphy
+```{r}
+plot(Group1)
+plot(Group2)
+plot(Group3)
+plot(Group4)
+plot(Group5)
+plot(Group6)
+plot(Group7)
+plot(Group8)
+plot(Group9)
+plot(Group10)
+plot(Group11)
+plot(Group12)
+plot(Group13)
+
+Test <- gtrends("climate hoax", 
+                      time = time, 
+                      gprop = type,
+                      low_search_volume = TRUE,
+                      geo = c("US-ID"
+,"US-ME"
+,"US-WV"
+,"US-ND"
+,"US-SD"
+))
+
+plot(Test)
+```
+
+
+
+
+
+
