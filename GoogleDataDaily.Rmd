@@ -264,12 +264,8 @@ from<-'2013-01-01'
 to<-'2014-12-31'
 
 
-
 DMA_list1<-lapply(QueryList,get_daily_gtrend, keyword=keyword, from=from, to=to)#
-
 DMA_DF1<-bind_rows(DMA_list1, .id = "column_label")
-
-
 
 
 #Some plots
@@ -280,7 +276,6 @@ ggplot(Trends_DMA_DF, aes(x = date, y = est_hits)) +
   geom_ma(aes(color = geo),ma_fun = SMA, n = 10) #30 day moving average
  
 ```
-
 
 
 Send to Dropbox
