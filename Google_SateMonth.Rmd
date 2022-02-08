@@ -243,7 +243,8 @@ Trends<-merge(Trends, GoogleFIPS, by = "geo", all.x = TRUE) #merge fips
 Trends$year<-substr(Trends$date, 1,4) #pull out year as separate var
 Trends$month<-substr(Trends$date, 6,7) #pull out month as separate var
 
-Trends<-distinct(Trends) #remove repeated baselines
+Trends<-Trends%>%
+  distinct(geo, date, .keep_all = TRUE) #remove duplicated baselines in each grouping
 
 
 print(Trends)
