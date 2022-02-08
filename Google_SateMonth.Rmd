@@ -275,10 +275,10 @@ AcrossState_Temperature<-TrendsAcrossGeo(search= "temperature",
                                      type = "web",
                                       baseline = "US-MT")
 
-AcrossState_Weather.gov<-TrendsAcrossGeo(search= "weather.gov",
+AcrossState_NOAA<-TrendsAcrossGeo(search= "noaa",
                                      time="2005-01-01 2017-12-31",
                                      type = "web",
-                                      baseline = "US-SD")
+                                      baseline = "US-FL")
 
 AcrossState_Dogs<-TrendsAcrossGeo(search= "dogs",
                                      time="2005-01-01 2017-12-31",
@@ -303,7 +303,7 @@ print(test)
 test<-subset(AcrossState_Temperature, AcrossState_Temperature$hits==100)
 print(test)
 
-test<-subset(AcrossState_Weather.gov, AcrossState_Weather.gov$hits==100)
+test<-subset(AcrossState_NOAA, AcrossState_NOAA$hits==100)
 print(test)
 
 test<-subset(AcrossState_Dogs, AcrossState_Dogs$hits==100)
@@ -316,19 +316,25 @@ print(test)
 ```
 
 
-
+###Join "hits" columns from each search and rename accordingly
 ```{r}
-Trends_AcrossState<-left_join(AcrossState_Weather, AcrossState_Forecast[,c("geo","date", "hits")], by = c("geo","date"))%>%
+Trends_AcrossState<-left_join(AcrossState_Weather, AcrossState_Forecast[,c("geo","date", "hits")], by = c("geo","date"))%>% #join "hits" columns
       left_join(AcrossState_Temperature[,c("geo","date", "hits")], by = c("geo","date"))%>%
-      left_join(AcrossState_Weather.gov[,c("geo","date", "hits")], by = c("geo","date"))%>%
+      left_join(AcrossState_NOAA[,c("geo","date", "hits")], by = c("geo","date"))%>%
       left_join(AcrossState_Dogs[,c("geo","date", "hits")], by = c("geo","date"))%>%
       left_join(AcrossState_Headache[,c("geo","date", "hits")], by = c("geo","date"))%>%
-      rename(hits_Weather=hits.x,
+      rename(hits_Weather=hits.x, #rename "hits" columns
          hits_Forecast=hits.y,
          hits_Temperature=hits.x.x,
-         hits_Weather.gov=hits.y.y,
+         hits_NOAA=hits.y.y,
          hits_Dogs=hits.x.x.x,
-         hits_Headache=hits.y.y.y)
+         hits_Headache=hits.y.y.y)%>%
+          select(-keyword, #remove unneeded variables
+                 -time,
+                 -gprop,
+                 -catagory)
+
+
 
 
 ```
@@ -470,15 +476,29 @@ Trends_WithinState<-left_join(WithinState_Weather, WithinState_Forecast[,c("geo"
 
 
 #Plots and Figures
-```{r}
+```{r, fig.width=20,fig.height=8}
+
+#Individual search volume within state
+ggplot(subset(Trends_WithinState, geo==c("US-AZ" )), aes(x = date, y = hits_Forecast)) + 
+  geom_line(aes(color = geo))
+
+ggplot(subset(Trends_WithinState, geo==c("US-AK")), aes(x = date, y = hits_Forecast)) + 
+  geom_line(aes(color = geo))+
+  scale_colour_manual(values = c('blue','red'))
+
+
+#Search volume across states where AK=100
+ggplot(subset(Trends_AcrossState, geo==c("US-AK","US-AZ" )), aes(x = date, y = hits_Forecast)) + 
+  geom_line(aes(color = geo))+
+  scale_colour_manual(values = c('blue','red'))
 
 ```
 
 
 #Export Data
 ```{r}
-
-
+write.csv(Trends_AcrossState,"Trends_AcrossState.csv")
+write.csv(Trends_WithinState,"Trends_WithinState.csv")
 
 
 ```
