@@ -1,5 +1,5 @@
 ---
-title: "Untitled"
+title: "Across and Within US Geography Search Data"
 author: "Logan"
 date: "2/6/2022"
 output: html_document
@@ -40,12 +40,10 @@ GoogleCross<-read.csv("StateGoogleCrosswalk2.csv")
 ```
 
 From Google:
-Values are calculated on a scale from 0 to 100, where 100 is the location with the most popularity as a fraction of total searches in that location, a value of 50 indicates a location which is half as popular. A value of 0 indicates a location where there was not enough data for this term. Note: A higher value means a higher proportion of all queries, not a higher absolute query count. So a tiny country where 80% of the queries are for "bananas" will get twice the score of a giant country where only 40% of the queries are for "bananas".
+"Values are calculated on a scale from 0 to 100, where 100 is the location with the most popularity as a fraction of total searches in that location, a value of 50 indicates a location which is half as popular. A value of 0 indicates a location where there was not enough data for this term. Note: A higher value means a higher proportion of all queries, not a higher absolute query count. So a tiny country where 80% of the queries are for "bananas" will get twice the score of a giant country where only 40% of the queries are for "bananas"."
 
 
 #Function Indexed across geography
-
-
 ```{r}
 TrendsAcrossGeo<- function(search,time,type,baseline) {
 
