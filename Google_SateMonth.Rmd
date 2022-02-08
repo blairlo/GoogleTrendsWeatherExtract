@@ -263,7 +263,7 @@ print(Trends)
 AcrossState_Weather<-TrendsAcrossGeo(search= "weather",
                                      time="2005-01-01 2017-12-31",
                                      type = "web",
-                                     baseline = "US-OR") #start with a best guess based on ranked interest by region https://trends.google.com/trends/explore?date=2005-01-01%202017-12-31&geo=US&q=Weather.
+                                     baseline = "US-OR") #start with a best guess based on ranked interest by region
 
 AcrossState_Forecast<-TrendsAcrossGeo(search= "forecast",
                                      time="2005-01-01 2017-12-31",
@@ -293,7 +293,6 @@ AcrossState_Headache<-TrendsAcrossGeo(search= "headache",
 
 
 
-
 test<-subset(AcrossState_Weather, AcrossState_Weather$hits==100)#check to see and make sure there isonly one index = 100.
 print(test) #If not, select one of the other states on this list and rerun function until only one baseleine exists
 
@@ -311,7 +310,6 @@ print(test)
 
 test<-subset(AcrossState_Headache, AcrossState_Headache$hits==100)
 print(test)
-
 
 ```
 
@@ -332,7 +330,7 @@ Trends_AcrossState<-left_join(AcrossState_Weather, AcrossState_Forecast[,c("geo"
           select(-keyword, #remove unneeded variables
                  -time,
                  -gprop,
-                 -catagory)
+                 -category)
 
 
 
@@ -415,18 +413,6 @@ print(State_index)
 
 #Run within State Trends
 ```{r}
-#Set Parameters
-search<-"weather"
-time<-"2005-01-01 2017-12-31"
-type<-"web"
-
-Within_StateWeather<-WithinStateTrend(search, time, type)
-
-```
-
-
-
-```{r}
 WithinState_Weather<-TrendsWithinGeo(search= "weather",
                                      time="2005-01-01 2017-12-31",
                                      type = "web")
@@ -452,27 +438,27 @@ WithinState_Headache<-TrendsWithinGeo(search= "headache",
                                      time="2005-01-01 2017-12-31",
                                      type = "web")
 
-
-
-
 ```
 
 
 ###Join "hits columns from each search and rename accordingly
 ```{r}
-Trends_WithinState<-left_join(WithinState_Weather, WithinState_Forecast[,c("geo","date", "hits")], by = c("geo","date"))%>%
+Trends_WithinState<-left_join(WithinState_Weather, WithinState_Forecast[,c("geo","date", "hits")], by = c("geo","date"))%>% #join "hits" columns
       left_join(WithinState_Temperature[,c("geo","date", "hits")], by = c("geo","date"))%>%
       left_join(WithinState_NOAA[,c("geo","date", "hits")], by = c("geo","date"))%>%
       left_join(WithinState_Dogs[,c("geo","date", "hits")], by = c("geo","date"))%>%
       left_join(WithinState_Headache[,c("geo","date", "hits")], by = c("geo","date"))%>%
-      rename(hits_Weather=hits.x,
+      rename(hits_Weather=hits.x, #rename "hits" columns
          hits_Forecast=hits.y,
          hits_Temperature=hits.x.x,
          hits_NOAA=hits.y.y,
          hits_Dogs=hits.x.x.x,
-         hits_Headache=hits.y.y.y)
+         hits_Headache=hits.y.y.y)%>%
+          select(-keyword, #remove unneeded columns
+                 -time,
+                 -gprop,
+                 -category)
 ```
-
 
 
 #Plots and Figures
@@ -499,8 +485,6 @@ ggplot(subset(Trends_AcrossState, geo==c("US-AK","US-AZ" )), aes(x = date, y = h
 ```{r}
 write.csv(Trends_AcrossState,"Trends_AcrossState.csv")
 write.csv(Trends_WithinState,"Trends_WithinState.csv")
-
-
 ```
 
 
