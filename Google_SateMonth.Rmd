@@ -5,12 +5,14 @@ date: "2/6/2022"
 output: html_document
 ---
 
+Be sure to check for latest code and dependencies @: https://github.com/blairlo/GoogleTrendsWeatherExtract
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 Packages <- c("digest", 
               "glue", 
               "reticulate", 
@@ -39,11 +41,144 @@ GoogleFIPS<-read.csv("StateGoogleCrosswalk.csv")
 GoogleCross<-read.csv("StateGoogleCrosswalk2.csv")
 ```
 
-From Google:
-"Values are calculated on a scale from 0 to 100, where 100 is the location with the most popularity as a fraction of total searches in that location, a value of 50 indicates a location which is half as popular. A value of 0 indicates a location where there was not enough data for this term. Note: A higher value means a higher proportion of all queries, not a higher absolute query count. So a tiny country where 80% of the queries are for "bananas" will get twice the score of a giant country where only 40% of the queries are for "bananas"."
+#Summary
+This markdown contains the necessary code to produce Trends_WithinState.csv and Trends_AcrossState.csv
+
+
+#Function Indexed within each geography
+Trends_WithinState.csv: contains the trends, or “hits”, for each search term’s popularity as a fraction of total searches in each state, with the largest normalized to = 100. Here, every state in the data will have one month per search term where (search)_hits=100, and the remainder of the monthly within-state, series describes variation relative to 100.
+
+One issue is Google’s trends website does not provide bulk downloads of single state time series required to produce a country wide data set. If your interested in 5 different search terms over 50 states over time it would require 250 individual downloads. Instead to generate Trends_WithinState.csv I’ve created a single function in R, based on Philippe Massicotte R package “gtrendsR”, that produces state-by-state data by running 51 individual queries at a time per search.
+
+```{r}
+TrendsWithinGeo<-function(search, time, type ){
+state <- select(GoogleCross, baseline) #Make FD of only state names
+state.list <- setNames(split(state, seq(nrow(state))), rownames(baseline)) # make each state a single item in a list
+state.list <- lapply(state.list, paste, collapse = " ") #convert to text strings (to work with Gtrend function)
+
+State_index<-gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[1]])$interest_over_time
+              State_index<-rbind(State_index, gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[2]])$interest_over_time)
+              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[3]])$interest_over_time) 
+              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[4]])$interest_over_time) 
+              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[5]])$interest_over_time) 
+              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[6]])$interest_over_time) 
+              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[7]])$interest_over_time) 
+              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[8]])$interest_over_time) 
+              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[9]])$interest_over_time) 
+              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[10]])$interest_over_time) 
+              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[11]])$interest_over_time)
+              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[12]])$interest_over_time)   
+              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[13]])$interest_over_time) 
+              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[14]])$interest_over_time) 
+              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[15]])$interest_over_time) 
+              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[16]])$interest_over_time) 
+              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[17]])$interest_over_time) 
+              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[18]])$interest_over_time) 
+              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[19]])$interest_over_time) 
+              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[20]])$interest_over_time)
+              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[21]])$interest_over_time)
+              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[22]])$interest_over_time)   
+              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[23]])$interest_over_time) 
+              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[24]])$interest_over_time) 
+              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[25]])$interest_over_time) 
+              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[26]])$interest_over_time) 
+              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[27]])$interest_over_time) 
+              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[28]])$interest_over_time) 
+              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[29]])$interest_over_time) 
+              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[30]])$interest_over_time)
+              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[31]])$interest_over_time)
+              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[32]])$interest_over_time)   
+              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[33]])$interest_over_time) 
+              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[34]])$interest_over_time) 
+              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[35]])$interest_over_time) 
+              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[36]])$interest_over_time) 
+              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[37]])$interest_over_time) 
+              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[38]])$interest_over_time) 
+              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[39]])$interest_over_time) 
+              #State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[40]])$interest_over_time) #exclude PR
+              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[41]])$interest_over_time)
+              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[42]])$interest_over_time)   
+              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[43]])$interest_over_time) 
+              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[44]])$interest_over_time) 
+              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[45]])$interest_over_time) 
+              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[46]])$interest_over_time) 
+              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[47]])$interest_over_time) 
+              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[48]])$interest_over_time) 
+              #State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[49]])$interest_over_time) #exclude VI
+              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[50]])$interest_over_time)
+              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[51]])$interest_over_time) 
+              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[52]])$interest_over_time) 
+              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[53]])$interest_over_time) 
+              
+              
+State_index<-merge(State_index, GoogleFIPS, by = "geo", all.x = TRUE) #merge fips
+State_index$year<-substr(State_index$date, 1,4) #pull out year as separate var
+State_index$month<-substr(State_index$date, 6,7) #pull out month as separate var  
+
+print(State_index)
+              
+}            
+
+```
+
+
+#Run within State Trends
+```{r}
+WithinState_Weather<-TrendsWithinGeo(search= "weather",
+                                     time="2005-01-01 2017-12-31",
+                                     type = "web")
+
+WithinState_Forecast<-TrendsWithinGeo(search= "forecast",
+                                     time="2005-01-01 2017-12-31",
+                                     type = "web")
+
+WithinState_Temperature<-TrendsWithinGeo(search= "temperature",
+                                     time="2005-01-01 2017-12-31",
+                                     type = "web")
+
+WithinState_NOAA<-TrendsWithinGeo(search= "noaa",
+                                     time="2005-01-01 2017-12-31",
+                                     type = "web")
+
+WithinState_Dogs<-TrendsWithinGeo(search= "dogs",
+                                     time="2005-01-01 2017-12-31",
+                                     type = "web")
+
+
+WithinState_Headache<-TrendsWithinGeo(search= "headache",
+                                     time="2005-01-01 2017-12-31",
+                                     type = "web")
+
+```
+
+
+###Join "hits columns from each search and rename accordingly
+```{r}
+Trends_WithinState<-left_join(WithinState_Weather, WithinState_Forecast[,c("geo","date", "hits")], by = c("geo","date"))%>% #join "hits" columns
+      left_join(WithinState_Temperature[,c("geo","date", "hits")], by = c("geo","date"))%>%
+      left_join(WithinState_NOAA[,c("geo","date", "hits")], by = c("geo","date"))%>%
+      left_join(WithinState_Dogs[,c("geo","date", "hits")], by = c("geo","date"))%>%
+      left_join(WithinState_Headache[,c("geo","date", "hits")], by = c("geo","date"))%>%
+      rename(hits_Weather=hits.x, #rename "hits" columns
+         hits_Forecast=hits.y,
+         hits_Temperature=hits.x.x,
+         hits_NOAA=hits.y.y,
+         hits_Dogs=hits.x.x.x,
+         hits_Headache=hits.y.y.y)%>%
+          select(-keyword, #remove unneeded columns
+                 -time,
+                 -gprop,
+                 -category)
+```
 
 
 #Function Indexed across geography
+Trends_AcrossState.csv: contains the trends, or “hits”, for each search term (see codebook) over time as a fraction of that term’s highest state-months compared to other US state-months . This means that only one state-month in the US per search term will have an index=100, and the remainder of the state-month series describes variation relative to 100.
+
+Another big hurdle, documented by others, is that regardless of using Google’s website or an API based package in R or python, Google limits the number of time series you can request at once to 5. This means 5 search terms, 5 geographies, or any combination to equal 5. While we might first think to download whatever we need in batches, we must remember that each search is scaled to the highest volume series in the query. Each 5 would be comparable within query, but not across query in any consistent way.
+
+One way around this to produce the Trends_AcrossState.csv is ensure that each query of 5 (in our case 5 states), has the highest search volume state in it (so batched of 4 states, indexed to the baseline state). To find the appropriate baseline, I request each search term (weather, forecast etc.) in a US wide query for 2005-2017. While this won’t give us state time series, it tells us the state with the highest aggregate search volume over that period—not necessary the highest state-month, but a good first guess. I’ve created a across-state function in the same R markdown, which accepts this baseline state as an argument passed to 14 separate state queries. I check each series and if multiple state-months =100 I select the next state as a baseline, rerun, recheck and so on until only one state-month=100.
+
 ```{r}
 TrendsAcrossGeo<- function(search,time,type,baseline) {
 
@@ -250,10 +385,6 @@ Trends<-Trends%>%
 print(Trends)
 
 }
-
-
-
-
 ```
 
 
@@ -337,146 +468,36 @@ Trends_AcrossState<-left_join(AcrossState_Weather, AcrossState_Forecast[,c("geo"
 ```
 
 
-#Function Indexed within each geography
-```{r}
-TrendsWithinGeo<-function(search, time, type ){
-state <- select(GoogleCross, baseline) #Make FD of only state names
-state.list <- setNames(split(state, seq(nrow(state))), rownames(baseline)) # make each state a single item in a list
-state.list <- lapply(state.list, paste, collapse = " ") #convert to text strings (to work with Gtrend function)
-
-State_index<-gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[1]])$interest_over_time
-              State_index<-rbind(State_index, gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[2]])$interest_over_time)
-              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[3]])$interest_over_time) 
-              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[4]])$interest_over_time) 
-              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[5]])$interest_over_time) 
-              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[6]])$interest_over_time) 
-              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[7]])$interest_over_time) 
-              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[8]])$interest_over_time) 
-              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[9]])$interest_over_time) 
-              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[10]])$interest_over_time) 
-              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[11]])$interest_over_time)
-              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[12]])$interest_over_time)   
-              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[13]])$interest_over_time) 
-              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[14]])$interest_over_time) 
-              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[15]])$interest_over_time) 
-              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[16]])$interest_over_time) 
-              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[17]])$interest_over_time) 
-              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[18]])$interest_over_time) 
-              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[19]])$interest_over_time) 
-              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[20]])$interest_over_time)
-              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[21]])$interest_over_time)
-              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[22]])$interest_over_time)   
-              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[23]])$interest_over_time) 
-              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[24]])$interest_over_time) 
-              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[25]])$interest_over_time) 
-              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[26]])$interest_over_time) 
-              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[27]])$interest_over_time) 
-              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[28]])$interest_over_time) 
-              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[29]])$interest_over_time) 
-              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[30]])$interest_over_time)
-              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[31]])$interest_over_time)
-              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[32]])$interest_over_time)   
-              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[33]])$interest_over_time) 
-              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[34]])$interest_over_time) 
-              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[35]])$interest_over_time) 
-              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[36]])$interest_over_time) 
-              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[37]])$interest_over_time) 
-              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[38]])$interest_over_time) 
-              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[39]])$interest_over_time) 
-              #State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[40]])$interest_over_time) #exclude PR
-              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[41]])$interest_over_time)
-              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[42]])$interest_over_time)   
-              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[43]])$interest_over_time) 
-              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[44]])$interest_over_time) 
-              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[45]])$interest_over_time) 
-              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[46]])$interest_over_time) 
-              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[47]])$interest_over_time) 
-              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[48]])$interest_over_time) 
-              #State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[49]])$interest_over_time) #exclude VI
-              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[50]])$interest_over_time)
-              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[51]])$interest_over_time) 
-              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[52]])$interest_over_time) 
-              State_index<-rbind(State_index,gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[53]])$interest_over_time) 
-              
-              
-State_index<-merge(State_index, GoogleFIPS, by = "geo", all.x = TRUE) #merge fips
-State_index$year<-substr(State_index$date, 1,4) #pull out year as separate var
-State_index$month<-substr(State_index$date, 6,7) #pull out month as separate var  
-
-print(State_index)
-              
-}            
-
-```
-
-
-#Run within State Trends
-```{r}
-WithinState_Weather<-TrendsWithinGeo(search= "weather",
-                                     time="2005-01-01 2017-12-31",
-                                     type = "web")
-
-WithinState_Forecast<-TrendsWithinGeo(search= "forecast",
-                                     time="2005-01-01 2017-12-31",
-                                     type = "web")
-
-WithinState_Temperature<-TrendsWithinGeo(search= "temperature",
-                                     time="2005-01-01 2017-12-31",
-                                     type = "web")
-
-WithinState_NOAA<-TrendsWithinGeo(search= "noaa",
-                                     time="2005-01-01 2017-12-31",
-                                     type = "web")
-
-WithinState_Dogs<-TrendsWithinGeo(search= "dogs",
-                                     time="2005-01-01 2017-12-31",
-                                     type = "web")
-
-
-WithinState_Headache<-TrendsWithinGeo(search= "headache",
-                                     time="2005-01-01 2017-12-31",
-                                     type = "web")
-
-```
-
-
-###Join "hits columns from each search and rename accordingly
-```{r}
-Trends_WithinState<-left_join(WithinState_Weather, WithinState_Forecast[,c("geo","date", "hits")], by = c("geo","date"))%>% #join "hits" columns
-      left_join(WithinState_Temperature[,c("geo","date", "hits")], by = c("geo","date"))%>%
-      left_join(WithinState_NOAA[,c("geo","date", "hits")], by = c("geo","date"))%>%
-      left_join(WithinState_Dogs[,c("geo","date", "hits")], by = c("geo","date"))%>%
-      left_join(WithinState_Headache[,c("geo","date", "hits")], by = c("geo","date"))%>%
-      rename(hits_Weather=hits.x, #rename "hits" columns
-         hits_Forecast=hits.y,
-         hits_Temperature=hits.x.x,
-         hits_NOAA=hits.y.y,
-         hits_Dogs=hits.x.x.x,
-         hits_Headache=hits.y.y.y)%>%
-          select(-keyword, #remove unneeded columns
-                 -time,
-                 -gprop,
-                 -category)
-```
-
-
 #Plots and Figures
-```{r, fig.width=20,fig.height=8}
+For example, the figures below show Arizona search history for “forecast” in red and Alaska history for the same search term “forecast” in blue. Note that the index =100 occurs in early 2010 for Arizona and early 2017 for Alaska. This provides a good deal of within-state variation but tells us little about across state differences.
 
+```{r}
 #Individual search volume within state
 ggplot(subset(Trends_WithinState, geo==c("US-AZ" )), aes(x = date, y = hits_Forecast)) + 
-  geom_line(aes(color = geo))
+  geom_line(aes(color = geo))+
+  scale_colour_manual(values = c('red'))
 
 ggplot(subset(Trends_WithinState, geo==c("US-AK")), aes(x = date, y = hits_Forecast)) + 
   geom_line(aes(color = geo))+
   scale_colour_manual(values = c('blue','red'))
+```
+
+
+The first figure below shows Arizona search history for “forecast” in red and Alaska history for the same search term “forecast” in blue as before, but here we see that compared to Alaska’s search history for “forecast”, Arizona’s search history has been scaled downward in relative terms (Alaska 9/2016 = 100 for this search term).
+
+The second figure below is smoothed, but we can zoom in to see that Arizona’s index in Trends_AcrossState is the same shape as Trends_WithinState before, but looking at the y axis, has been scaled down.
+
+```{r, fig.width=15,fig.height=4}
+#Search volume across states where AK=100
+ggplot(subset(Trends_AcrossState, geo==c("US-AZ" )), aes(x = date, y = hits_Forecast)) + 
+  geom_line(aes(color = geo))+
+  scale_colour_manual(values = c('red'))
 
 
 #Search volume across states where AK=100
 ggplot(subset(Trends_AcrossState, geo==c("US-AK","US-AZ" )), aes(x = date, y = hits_Forecast)) + 
   geom_line(aes(color = geo))+
   scale_colour_manual(values = c('blue','red'))
-
 ```
 
 
