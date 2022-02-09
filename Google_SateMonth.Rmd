@@ -39,6 +39,10 @@ lapply(Packages, library, character.only = TRUE)
 ```{r}
 GoogleFIPS<-read.csv("StateGoogleCrosswalk.csv")
 GoogleCross<-read.csv("StateGoogleCrosswalk2.csv")
+
+state <- select(GoogleCross, baseline) #Make DF of only state names
+state.list <- setNames(split(state, seq(nrow(state))), rownames(baseline)) # make each state a single item in a list
+state.list <- lapply(state.list, paste, collapse = " ") #convert to text strings (to work with Gtrend function)
 ```
 
 #Summary
@@ -52,9 +56,6 @@ One issue is Google’s trends website does not provide bulk downloads of single
 
 ```{r}
 TrendsWithinGeo<-function(search, time, type ){
-state <- select(GoogleCross, baseline) #Make FD of only state names
-state.list <- setNames(split(state, seq(nrow(state))), rownames(baseline)) # make each state a single item in a list
-state.list <- lapply(state.list, paste, collapse = " ") #convert to text strings (to work with Gtrend function)
 
 State_index<-gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[1]])$interest_over_time
               State_index<-rbind(State_index, gtrends(search, time = time,  gprop = type,low_search_volume = TRUE, geo = state.list[[2]])$interest_over_time)
