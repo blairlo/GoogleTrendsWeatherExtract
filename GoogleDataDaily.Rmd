@@ -27,7 +27,6 @@ Packages <- c("digest",
               "fansi",
               "lubridate",
               "ExcelFunctionsR",
-              "tidyquant",
               "gtrendsR"
               )
 
@@ -221,7 +220,7 @@ keyword<-c('weather','dog')
 from<-'2015-01-01'
 to<-'2021-12-31'
 
-DMA.list <- setNames(split(DMA, seq(nrow(DMA))), rownames(DMA))#make a list of all (210 DMAs)
+DMA.list <- setNames(split(DMA, seq(nrow(DMA))), rownames(DMA)) #make a list of all (210 DMAs)
 DMA.list <- lapply(DMA.list, paste, collapse = " ") #make list text strings
 DMA_list2<-lapply(DMA.list,get_daily_gtrend, keyword=keyword, from=from, to=to) #loop over list to request trends for each DMA
 DMA_DF2<-bind_rows(DMA_list2, .id = "column_label") #stack results into 1 data frame
